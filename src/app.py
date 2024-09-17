@@ -17,26 +17,19 @@ else:
     app.config['SQLALCHEMY_DATABASE_URI'] = "sqlite:////tmp/test.db"
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-# Inicialización de la base de datos y migraciones
-
 MIGRATE = Migrate(app, db)
 db.init_app(app)
 CORS(app)
 setup_admin(app)
 
-# Manejador de errores
 @app.errorhandler(APIException)
 def handle_invalid_usage(error):
     return jsonify(error.to_dict()), error.status_code
 
-# Generador del sitemap
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
 
-# --- Endpoints de Personajes ---
-
-# [GET] Listar todos los personajes
 @app.route('/people', methods=['GET'])
 def get_all_people():
     try:
@@ -46,7 +39,6 @@ def get_all_people():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# [GET] Obtener un personaje por ID
 @app.route('/people/<int:people_id>', methods=['GET'])
 def get_personaje(people_id):
     try:
@@ -57,9 +49,6 @@ def get_personaje(people_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Endpoints de Planetas ---
-
-# [GET] Listar todos los planetas
 @app.route('/planets', methods=['GET'])
 def get_all_planets():
     try:
@@ -69,7 +58,6 @@ def get_all_planets():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# [GET] Obtener un planeta por ID
 @app.route('/planets/<int:planet_id>', methods=['GET'])
 def get_planet(planet_id):
     try:
@@ -80,16 +68,12 @@ def get_planet(planet_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
-# --- Rutas y Endpoints ---
-
-# [GET] Listar todos los usuarios
 @app.route('/users', methods=['GET'])
 def get_all_users():
     users = Usuario.query.all()
     result = [user.serialize() for user in users]
     return jsonify(result), 200
 
-# [GET] Listar todos los favoritos del usuario (usando user_id dinámico)
 @app.route('/users/<int:user_id>/favorites', methods=['GET'])
 def get_user_favorites(user_id):
     user = Usuario.query.get(user_id)
@@ -100,7 +84,6 @@ def get_user_favorites(user_id):
     result = [fav.serialize() for fav in favorites]
     return jsonify(result), 200
 
-# [POST] Añadir un planeta favorito (usando user_id dinámico)
 @app.route('/users/<int:user_id>/favorite/planet/<int:planet_id>', methods=['POST'])
 def add_favorite_planet(user_id, planet_id):
     user = Usuario.query.get(user_id)
@@ -111,7 +94,6 @@ def add_favorite_planet(user_id, planet_id):
     if not planet:
         return jsonify({"msg": "Planeta no encontrado"}), 404
 
-    # Verificar si ya existe en favoritos
     favorite_exists = Favoritos.query.filter_by(usuario_id=user_id, planeta_id=planet_id).first()
     if favorite_exists:
         return jsonify({"msg": "Este planeta ya está en tus favoritos"}), 400
@@ -121,7 +103,6 @@ def add_favorite_planet(user_id, planet_id):
     db.session.commit()
     return jsonify({"msg": "Planeta añadido a favoritos"}), 200
 
-# [POST] Añadir un personaje favorito (usando user_id dinámico)
 @app.route('/users/<int:user_id>/favorite/people/<int:people_id>', methods=['POST'])
 def add_favorite_people(user_id, people_id):
     user = Usuario.query.get(user_id)
@@ -141,7 +122,6 @@ def add_favorite_people(user_id, people_id):
     db.session.commit()
     return jsonify({"msg": "Personaje añadido a favoritos"}), 200
 
-# [DELETE] Eliminar un planeta favorito (usando user_id dinámico)
 @app.route('/users/<int:user_id>/favorite/planet/<int:planet_id>', methods=['DELETE'])
 def delete_favorite_planet(user_id, planet_id):
     user = Usuario.query.get(user_id)
@@ -156,7 +136,6 @@ def delete_favorite_planet(user_id, planet_id):
     db.session.commit()
     return jsonify({"msg": "Planeta eliminado de favoritos"}), 200
 
-# [DELETE] Eliminar un personaje favorito (usando user_id dinámico)
 @app.route('/users/<int:user_id>/favorite/people/<int:people_id>', methods=['DELETE'])
 def delete_favorite_people(user_id, people_id):
     user = Usuario.query.get(user_id)
@@ -171,7 +150,6 @@ def delete_favorite_people(user_id, people_id):
     db.session.commit()
     return jsonify({"msg": "Personaje eliminado de favoritos"}), 200
 
-# Ejecutar la aplicación
 if __name__ == '__main__':
     PORT = int(os.environ.get('PORT', 3000))
     app.run(host='0.0.0.0', port=PORT, debug=False)
